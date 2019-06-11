@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CudaCompile Include="HilbertTransform.cu" />
+    <CudaCompile Include="convolutionFFT2D.cu" />
+    <CudaCompile Include="FFT.cu" />
+    <CudaCompile Include="lmcurve.cu" />
+    <CudaCompile Include="lmmin.cu" />
+    <CudaCompile Include="FastUnwrapping.cu">
+      <Filter>Unwrapping\FFT</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Goldstein.cu">
+      <Filter>Unwrapping\Goldstein</Filter>
+    </CudaCompile>
+    <CudaCompile Include="DCT_Unwrapping.cu">
+      <Filter>Unwrapping\DCT</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Recon_kernel.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Unwrapping">
+      <UniqueIdentifier>{fbaf977b-ce53-41eb-ac62-5dfcd5146915}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Unwrapping\FFT">
+      <UniqueIdentifier>{f52ad559-ffff-4608-ad7d-315bc3e786b0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Unwrapping\Goldstein">
+      <UniqueIdentifier>{ac59077a-05a5-477c-83e2-3d9bf1460891}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Unwrapping\DCT">
+      <UniqueIdentifier>{c7a97a80-5250-4921-ac27-58b20eb9c839}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="convolutionFFT2D.cuh" />
+    <ClInclude Include="FFT.cuh" />
+    <ClInclude Include="HilbertTransform.cuh" />
+    <ClInclude Include="lmcurve.cuh" />
+    <ClInclude Include="lmmin.cuh" />
+    <ClInclude Include="lmstruct.cuh" />
+    <ClInclude Include="Common.h" />
+    <ClInclude Include="convolutionFFT2D_common.h" />
+    <ClInclude Include="FastUnwrapping.cuh">
+      <Filter>Unwrapping\FFT</Filter>
+    </ClInclude>
+    <ClInclude Include="Goldstein.cuh">
+      <Filter>Unwrapping\Goldstein</Filter>
+    </ClInclude>
+    <ClInclude Include="DCT_Unwrapping.cuh">
+      <Filter>Unwrapping\DCT</Filter>
+    </ClInclude>
+    <ClInclude Include="dct8x8_kernel2.cuh">
+      <Filter>Unwrapping\DCT</Filter>
+    </ClInclude>
+    <ClInclude Include="Recon_kernel.cuh" />
+  </ItemGroup>
+</Project>
