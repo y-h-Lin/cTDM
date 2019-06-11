@@ -71,6 +71,40 @@ int AccumFrame;
 
 //int ResizeFlag, ReconFlag;
 
+// used for this project
+int blocksInX, blocksInY;	//for original size
+int blocksInX2, blocksInY2;	//for original size/2
+int blocksInX3, blocksInY3;	//for original size/4
+int blocksInX4, blocksInY4;	//for original size/8
+
+//device memory
+cufftComplex *cuSP, *cuBG, *cuSP2, *cuBG2, *selectSP, *selectBG;
+float *SPWrapPhase, *BGWrapPhase, *SPWrapPhase2, *BGWrapPhase2;
+float *UnWrapPhaseSP, *UnWrapPhaseBG, *UnWrapPhaseSP2, *UnWrapPhaseBG2;
+int *circleImg;
+float *cuPhaseMap, *cuAmpMap, *cuPhaseMap2, *cuAmpMap2;
+
+//host memory
+float *PhaseMap;
+float *AmpMap;
+float *FinalPhase;
+float *FinalAmp;
+microImg *ResultImg;
+float *PhaseStack, *AmpStack;
+bool *status_series;
+float *sampleAngleRadX_Stack, *sampleAngleRadY_Stack;
+
+//Extraction QPI
+//device memory
+float *cuSP_PE_temp, *cuBG_PE_temp, *cuSP_PE_resample, *cuBG_PE_resample;
+cufftComplex *device_PE_FFT, *out_PE_FFT;
+float *sumFFT_PE_1D;
+
+//DCT allocation
+float *LaplaceArray, *outX, *outY, *inX, *inY;
+float *dst_DCT;
+cufftComplex *dSrc_DCT_FORWARD, *dSrc_DCT_INVERSE;
+
 
 #define MEDIAN_DIMENSION  3 // For matrix of 3 x 3. We can Use 5 x 5 , 7 x 7 , 9 x 9......   
 #define MEDIAN_LENGTH 9   // Shoul be  MEDIAN_DIMENSION x MEDIAN_DIMENSION = 3 x 3

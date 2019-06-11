@@ -24,7 +24,7 @@ size_t freeDeviceMemory;
 size_t totalDeviceMemory;
 
 int SpeedTestFlag = 0;
-int QPI_Method = 0;
+int QPI_Method = 1;
 int ResizeFlag = 1;
 int ReconFlag = 1;
 int ReconSave;
@@ -395,23 +395,23 @@ void HilbertTransform(char *SPDir, char *BGDir, char *AngDir, char *SaveDir,
 
 	//defined the size of 'grid' and 'block' on device
 	//for original size
-	int blocksInX = (Nx + 32 - 1) / 32;
-	int blocksInY = (Ny + 32 - 1) / 32;
+	blocksInX = (Nx + 32 - 1) / 32;
+	blocksInY = (Ny + 32 - 1) / 32;
 	dim3 grid(blocksInX, blocksInY);
 	dim3 block(32, 32);
 	//for original size/2
-	int blocksInX2 = (Nx/2 + 32 - 1) / 32;
-	int blocksInY2 = (Ny/2 + 32 - 1) / 32;
+	blocksInX2 = (Nx/2 + 32 - 1) / 32;
+	blocksInY2 = (Ny/2 + 32 - 1) / 32;
 	dim3 grid2(blocksInX2, blocksInY2);
 	dim3 block2(32, 32);
 	//for original size/4
-	int blocksInX3 = (Nx2 + 32 - 1) / 32;
-	int blocksInY3 = (Ny2 + 32 - 1) / 32;
+	blocksInX3 = (Nx2 + 32 - 1) / 32;
+	blocksInY3 = (Ny2 + 32 - 1) / 32;
 	dim3 grid3(blocksInX3, blocksInY3);
 	dim3 block3(32, 32);
 	//for original size/8
-	int blocksInX4 = (Nx2/2 + 32 - 1) / 32;
-	int blocksInY4 = (Ny2/2 + 32 - 1) / 32;
+	blocksInX4 = (Nx2/2 + 32 - 1) / 32;
+	blocksInY4 = (Ny2/2 + 32 - 1) / 32;
 	dim3 grid4(blocksInX4, blocksInY4);
 	dim3 block4(32, 32);
 
@@ -477,13 +477,6 @@ void HilbertTransform(char *SPDir, char *BGDir, char *AngDir, char *SaveDir,
 		
 	}
 	
-
-	//device memory
-	cufftComplex *cuSP, *cuBG, *cuSP2, *cuBG2, *selectSP, *selectBG;
-	float *SPWrapPhase, *BGWrapPhase, *SPWrapPhase2, *BGWrapPhase2;
-	float *UnWrapPhaseSP, *UnWrapPhaseBG, *UnWrapPhaseSP2, *UnWrapPhaseBG2;
-	int *circleImg;
-	float *cuPhaseMap, *cuAmpMap, *cuPhaseMap2, *cuAmpMap2;
 	cudaMalloc((void **)&cuPhaseMap, sizeof(float)*Nx *Ny);
 	cudaMalloc((void **)&cuAmpMap, sizeof(float)*Nx *Ny);
 
@@ -561,20 +554,37 @@ void HilbertTransform(char *SPDir, char *BGDir, char *AngDir, char *SaveDir,
 
 	cufftPlan2d(&plan_2D_C2C_FORWARD_FTUP, Nx2/2, Ny2/2, CUFFT_C2C);
 	cufftPlan2d(&plan_2D_C2C_INVERSE_FTUP, Nx2 / 2, Ny2 / 2, CUFFT_C2C);
-	
+
+	//calculating the wrapped phase in GPU by Algorithm B
+	cudaMalloc((void **)&cuSP_PE_temp, sizeof(float)*Nx *Ny);
+	cudaMalloc((void **)&cuBG_PE_temp, sizeof(float)*Nx *Ny);
+	cudaMalloc((void **)&cuSP_PE_resample, sizeof(float)*Nx*(Ny / 4));
+	cudaMalloc((void **)&cuBG_PE_resample, sizeof(float)*Nx*(Ny / 4));
+	cudaMalloc((void **)&device_PE_FFT, sizeof(cufftComplex)*Nx*(Ny / 4));
+	cudaMalloc((void **)&out_PE_FFT, sizeof(cufftComplex)*(Nx / 4)*(Ny / 4));
+	cudaMalloc((void **)&sumFFT_PE_1D, sizeof(float)*Nx);
+
+	//DCT phase unwrapping
+	cudaMalloc((void **)&LaplaceArray, sizeof(float)*(Nx / 4)*(Ny / 4));
+	cudaMalloc((void **)&inX, sizeof(float)*(Nx / 4)*(Ny / 4));
+	cudaMalloc((void **)&inY, sizeof(float)*(Nx / 4)*(Ny / 4));
+	size_t DeviceStride;
+	checkCudaErrors(cudaMallocPitch((void **)&dst_DCT, &DeviceStride, (Nx / 4) * sizeof(float), (Ny / 4)));
+	cudaMalloc((void **)&dSrc_DCT_FORWARD, sizeof(cufftComplex)*((Nx / 4) * 2)*(Ny / 4));
+	cudaMalloc((void **)&dSrc_DCT_INVERSE, sizeof(cufftComplex)*((Nx / 4) * 2)*(Ny / 4));
+
+	//calculating the wrapped phase in GPU by Algorithm A
+
 
 	//host memory for output
-	float *PhaseMap   = (float *)malloc(Nx*Ny*sizeof(float));
-	float *AmpMap     = (float *)malloc(Nx*Ny*sizeof(float));
-	float *FinalPhase = (float *)malloc(Nx*Ny*sizeof(float));
-	float *FinalAmp   = (float *)malloc(Nx*Ny*sizeof(float));
-	microImg *ResultImg = (microImg *)malloc(Nx*Ny*sizeof(microImg));
+	PhaseMap   = (float *)malloc(Nx*Ny*sizeof(float));
+	AmpMap     = (float *)malloc(Nx*Ny*sizeof(float));
+	FinalPhase = (float *)malloc(Nx*Ny*sizeof(float));
+	FinalAmp   = (float *)malloc(Nx*Ny*sizeof(float));
+	ResultImg = (microImg *)malloc(Nx*Ny*sizeof(microImg));
 
 	//alloc memory for Reconstruction if 'ReconFlag' is TRUE
-	int totalFrame_temp = totalFrame;
-	float *PhaseStack, *AmpStack;
-	bool *status_series;
-	float *sampleAngleRadX_Stack, *sampleAngleRadY_Stack;
+	int totalFrame_temp = totalFrame;	
 	status_series = (bool   *)malloc(totalFrame_temp*sizeof(bool));
 	sampleAngleRadX_Stack = (float *)malloc(totalFrame_temp*sizeof(float));
 	sampleAngleRadY_Stack = (float *)malloc(totalFrame_temp*sizeof(float));
@@ -921,7 +931,7 @@ void HilbertTransform(char *SPDir, char *BGDir, char *AngDir, char *SaveDir,
 
 			//Start QPI extraction			
 			switch (QPI_Method) {
-			case 0:
+			case 0:				
 				if (SpeedTestFlag == 1)
 				{
 					extractQPI(SP_float_All[frame - 1], BG_float_All[frame - 1], cuSP2, cuBG2, Nx, Ny);
@@ -1312,6 +1322,25 @@ void HilbertTransform(char *SPDir, char *BGDir, char *AngDir, char *SaveDir,
 	cudaFree(cuPhaseMap2);
 	cudaFree(cuAmpMap2);
 
+	//sequence1DFFT
+	cudaFree(cuSP_PE_temp);
+	cudaFree(cuBG_PE_temp);
+	cudaFree(cuSP_PE_resample);
+	cudaFree(cuBG_PE_resample);
+	cudaFree(device_PE_FFT);
+	cudaFree(sumFFT_PE_1D);
+	cudaFree(out_PE_FFT);
+
+	//DCT
+	//clean up memory
+	checkCudaErrors(cudaFree(LaplaceArray));
+	checkCudaErrors(cudaFree(inX));
+	checkCudaErrors(cudaFree(inY));
+	//checkCudaErrors(cudaFree(outX));
+	//checkCudaErrors(cudaFree(outY));
+	checkCudaErrors(cudaFree(dst_DCT));
+	cudaFree(dSrc_DCT_FORWARD);
+	cudaFree(dSrc_DCT_INVERSE);
 	cudaDeviceReset();
 
 }
@@ -1548,78 +1577,62 @@ void RefreshStack(float *PhaseStack, float *AmpStack, bool *status_series, float
 //--------------------------------------------------------------------------------------
 void extractQPI(float *SP, float *BG, cufftComplex *cuSP_FFT, cufftComplex *cuBG_FFT, int Nx, int Ny)
 {
-	int blocksInX = (Nx + 32 - 1) / 32;
-	int blocksInY = (Ny/4 + 32 - 1) / 32;
-	dim3 grid(blocksInX, blocksInY);
-	dim3 block(32, 32);
-
-	float *cuSP_temp, *cuBG_temp, *cuSP_resample, *cuBG_resample;
-	cudaMalloc((void **)&cuSP_temp, sizeof(float)*Nx *Ny);
-	cudaMalloc((void **)&cuBG_temp, sizeof(float)*Nx *Ny);
-	cudaMalloc((void **)&cuSP_resample, sizeof(float)*Nx*(Ny / 4) );
-	cudaMalloc((void **)&cuBG_resample, sizeof(float)*Nx*(Ny / 4) );
+	dim3 grid(blocksInX, blocksInY3);
+	dim3 block(32, 32);	
+	
 	s_datatransfer = clock();
-	cudaMemcpy(cuSP_temp, SP, sizeof(float)*Nx*Ny, cudaMemcpyHostToDevice);
-	cudaMemcpy(cuBG_temp, BG, sizeof(float)*Nx*Ny, cudaMemcpyHostToDevice);
-	e_datatransfer = clock();
-	dataTransfer_time += e_datatransfer - s_datatransfer;
-	
+	cudaMemcpy(cuSP_PE_temp, SP, sizeof(float)*Nx*Ny, cudaMemcpyHostToDevice);
+	cudaMemcpy(cuBG_PE_temp, BG, sizeof(float)*Nx*Ny, cudaMemcpyHostToDevice);
+	e_datatransfer = clock();	dataTransfer_time += e_datatransfer - s_datatransfer;
+
 	s_wrap = clock();
-	bilinear_interpolation_kernel << <grid, block >> >(cuSP_resample, cuSP_temp, cuBG_resample, cuBG_temp, Nx, Ny, Nx, Ny/4);
-	//bilinear_interpolation_kernel << <grid, block >> >(cuBG_resample, cuBG_temp, Nx, Ny, Nx, Ny/4);
+	bilinear_interpolation_kernel << <grid, block >> >(cuSP_PE_resample, cuSP_PE_temp, cuBG_PE_resample, cuBG_PE_temp, Nx, Ny, Nx, Ny/4);
+	//bilinear_interpolation_kernel << <grid, block >> >(cuBG_resample, cuBG_temp, Nx, Ny, Nx, Ny/4);	
+
+	sequence1DFFT(cuSP_PE_resample, cuSP_FFT, Nx, Ny);
+	sequence1DFFT(cuBG_PE_resample, cuBG_FFT, Nx, Ny);
 	e_wrap = clock();	wrap_time += e_wrap - s_wrap;
-
-	sequence1DFFT(cuSP_resample, cuSP_FFT, Nx, Ny);
-	sequence1DFFT(cuBG_resample, cuBG_FFT, Nx, Ny);	
-	//DeviceMemOut("cuSP_resample.1024.256.raw", cuSP_resample, Nx, Ny / 4);
+	//DeviceMemOut("cuSP_resample.1024.256.raw", cuSP_resample, Nx, Ny / 4);	
 	
-
-	cudaFree(cuSP_temp);
-	cudaFree(cuBG_temp);
-	cudaFree(cuSP_resample);
-	cudaFree(cuBG_resample);
 }
 //--------------------------------------------------------------------------------------
 void sequence1DFFT(float *ResampleArray, cufftComplex *out_array, int Nx, int Ny)
 {
-	int blocksInX = (Nx / 2 + 32 - 1) / 32;
-	int blocksInY = (Ny / 4 + 32 - 1) / 32;
-	dim3 grid(blocksInX, blocksInY);
+	//int blocksInX = (Nx / 2 + 32 - 1) / 32;
+	//int blocksInY = (Ny / 4 + 32 - 1) / 32;
+	dim3 grid(blocksInX2, blocksInY3);
 	dim3 block(32, 32);
 
 	//host memory
 	//cufftComplex *host_FFT = (cufftComplex *)malloc(Nx * (Ny / 4) * sizeof(cufftComplex));
 	//cufftComplex *host_out = (cufftComplex *)malloc((Nx / 4)*(Ny / 4) *sizeof(cufftComplex));
 	//device memory
-	cufftComplex *device_FFT, *out_FFT;
-	float *sumFFT_1D;
-	cudaMalloc((void **)&device_FFT, sizeof(cufftComplex)*Nx*(Ny / 4));
-	cudaMalloc((void **)&out_FFT, sizeof(cufftComplex)*(Nx / 4)*(Ny / 4));
-	cudaMalloc((void **)&sumFFT_1D, sizeof(float)*Nx);
-	cudaMemset(sumFFT_1D, 0, Nx*sizeof(float));
+	
+	
+	cudaMemset(sumFFT_PE_1D, 0, Nx*sizeof(float));
 
 	//copy the floating array to cufftComplex
 	dim3 dimGrid(Nx / TILE_DIM, Ny /4 / TILE_DIM, 1);
 	dim3 dimBlock(TILE_DIM, BLOCK_ROWS, 1);
-	real2cufft << <dimGrid, dimBlock >> >(device_FFT, ResampleArray);
+	real2cufft << <dimGrid, dimBlock >> >(device_PE_FFT, ResampleArray);
 
-	s_wrap = clock();
+	//s_wrap = clock();
 	//1D FFT
 	//cuFFT1D(device_FFT, Nx, Ny / 4, -1);	
-	cufftExecC2C(plan_1D_C2C_FORWARD_FT, device_FFT, device_FFT, CUFFT_FORWARD);
+	cufftExecC2C(plan_1D_C2C_FORWARD_FT, device_PE_FFT, device_PE_FFT, CUFFT_FORWARD);
 	//DeviceMemOutFFT("D:\\device_FFT.1024.256.raw", device_FFT, Nx, Ny / 4);
 	
 	//crop the component from FT domain
 	
 
-	s_wrap = clock();
-	shiftArray << <grid, block >> >(device_FFT, Nx, Ny / 4);
-	HistogramFT << <(Nx + 1024 - 1) / 1024, 1024 >> >(sumFFT_1D,device_FFT,Nx, Ny/4);
-	e_wrap = clock();	wrap_time += e_wrap - s_wrap;
+	//s_wrap = clock();
+	shiftArray << <grid, block >> >(device_PE_FFT, Nx, Ny / 4);
+	HistogramFT << <(Nx + 1024 - 1) / 1024, 1024 >> >(sumFFT_PE_1D,device_PE_FFT,Nx, Ny/4);
+	//e_wrap = clock();	wrap_time += e_wrap - s_wrap;
 
 	//DeviceMemOut("D:\\sumFFT_1D.1024.1.raw", sumFFT_1D, Nx, 1);
 	//find out the maximum and its index
-	thrust::device_ptr<float> max_ptr = thrust::device_pointer_cast(sumFFT_1D);
+	thrust::device_ptr<float> max_ptr = thrust::device_pointer_cast(sumFFT_PE_1D);
 	thrust::device_ptr<float> result_offset = thrust::max_element(max_ptr + int(Nx*0.6), max_ptr + Nx);
 
 	//float max_value = result_offset[0];
@@ -1627,36 +1640,34 @@ void sequence1DFFT(float *ResampleArray, cufftComplex *out_array, int Nx, int Ny
 	//printf("\nMininum value = %f\n", max_value);
 	//printf("Position = %i\n", &result_offset[0] - &max_ptr[0]);
 
-	int blocksX2 = (Nx / 4 + 32 - 1) / 32;
-	int blocksY2 = (Ny / 4 + 32 - 1) / 32;
-	dim3 grid2(blocksX2, blocksY2);
+	//int blocksX2 = (Nx / 4 + 32 - 1) / 32;
+	//int blocksY2 = (Ny / 4 + 32 - 1) / 32;
+	dim3 grid2(blocksInX3, blocksInY3);
 	dim3 block2(32, 32);
 
-	int blocksX3 = (Nx / 8 + 32 - 1) / 32;
-	int blocksY3 = (Ny / 4 + 32 - 1) / 32;
-	dim3 grid3(blocksX3, blocksY3);
+	//int blocksX3 = (Nx / 8 + 32 - 1) / 32;
+	//int blocksY3 = (Ny / 4 + 32 - 1) / 32;
+	dim3 grid3(blocksInX4, blocksInY3);
 	dim3 block3(32, 32);
 
-	s_wrap = clock();
-	CropFTdomain << <grid2, block2 >> >(device_FFT, out_FFT, Nx, Ny, max_idx);
+	//s_wrap = clock();
+	CropFTdomain << <grid2, block2 >> >(device_PE_FFT, out_PE_FFT, Nx, Ny, max_idx);
 	//DeviceMemOutFFT("out_FFT.256.256.raw", out_FFT, (Nx / 4), (Ny / 4));
-	shiftArray << <grid3, block3 >> >(out_FFT, Nx / 4, Ny / 4);
+	shiftArray << <grid3, block3 >> >(out_PE_FFT, Nx / 4, Ny / 4);
 	//inverse FFT
 	//cuFFT1D(out_FFT, Nx / 4, Ny / 4, 1);
-	cufftExecC2C(plan_1D_C2C_INVERSE_FT, out_FFT, out_FFT, CUFFT_INVERSE);
-	e_wrap = clock();	wrap_time += e_wrap - s_wrap;
+	cufftExecC2C(plan_1D_C2C_INVERSE_FT, out_PE_FFT, out_PE_FFT, CUFFT_INVERSE);
+	//e_wrap = clock();	wrap_time += e_wrap - s_wrap;
 
 	//DeviceMemOutFFT("out_iFFT.256.256.raw", out_FFT, (Nx / 4), (Ny / 4));
 	dim3 dimGrid2(Nx / 4 / TILE_DIM, Ny / 4 / TILE_DIM, 1);
 	dim3 dimBlock2(TILE_DIM, BLOCK_ROWS, 1);
 
-	s_wrap = clock();
-	copySharedMem << <dimGrid2, dimBlock2 >> >(out_array, out_FFT, Nx/4);
-	e_wrap = clock();	wrap_time += e_wrap - s_wrap;
+	//s_wrap = clock();
+	copySharedMem << <dimGrid2, dimBlock2 >> >(out_array, out_PE_FFT, Nx/4);
+	//e_wrap = clock();	wrap_time += e_wrap - s_wrap;
 
-	cudaFree(device_FFT);
-	cudaFree(sumFFT_1D);
-	cudaFree(out_FFT);
+	
 	//free(host_out);
 	//free(host_FFT);
 }

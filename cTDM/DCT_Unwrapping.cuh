@@ -30,12 +30,21 @@
 #include "FFT.cuh"
 
 
-//#include "HilbertTransform.cuh"
+
+// used for this project
+extern int blocksInX, blocksInY;	//for original size
+extern int blocksInX2, blocksInY2;	//for original size/2
+extern int blocksInX3, blocksInY3;	//for original size/4
+extern int blocksInX4, blocksInY4;	//for original size/8
 
 extern clock_t s_unwrap, e_unwrap;
 extern float unwrap_time;
 extern cufftHandle plan_1D_C2C_FORWARD;
 extern cufftHandle plan_1D_C2C_INVERSE;
+
+extern float *LaplaceArray, *outX, *outY, *inX, *inY;
+extern float *dst_DCT;
+extern cufftComplex *dSrc_DCT_FORWARD, *dSrc_DCT_INVERSE;
 
 typedef struct
 {

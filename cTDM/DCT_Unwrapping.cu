@@ -13,15 +13,11 @@ void DCT_UWLS_Unwrapped(float *ImgDst, float *ImgSrc, int sizeX, int sizeY)
 	Size.width  = sizeX;
 	Size.height = sizeY;
 
-	int blocksInX = (sizeX+32-1)/32;
-	int blocksInY = (sizeY+32-1)/32;
-	dim3 grid(blocksInX, blocksInY);
-	dim3 block(32, 32);
+	//int blocksInX = (sizeX+32-1)/32;
+	//int blocksInY = (sizeY+32-1)/32;
+	dim3 grid(blocksInX3, blocksInY3);
+	dim3 block(32, 32);	
 	
-	float *LaplaceArray, *outX, *outY, *inX, *inY;
-	cudaMalloc((void **)&LaplaceArray ,sizeof(float)*Size.width*Size.height);	
-	cudaMalloc((void **)&inX, sizeof(float)*Size.width*Size.height);
-	cudaMalloc((void **)&inY, sizeof(float)*Size.width*Size.height);
 	//cudaMalloc((void **)&outX, sizeof(float)*Size.width*Size.height);
 	//cudaMalloc((void **)&outY, sizeof(float)*Size.width*Size.height);
 	cudaMemset(inX, 0.0, sizeof(float)*Size.width*Size.height);
@@ -41,39 +37,30 @@ void DCT_UWLS_Unwrapped(float *ImgDst, float *ImgSrc, int sizeX, int sizeY)
 	e_unwrap = clock(); unwrap_time += e_unwrap - s_unwrap;
 
     //allocate device memory
-    float *dst;
-    size_t DeviceStride;
-    checkCudaErrors(cudaMallocPitch((void **)&dst, &DeviceStride, Size.width * sizeof(float), Size.height));	
+    //float *dst_DCT;
+    //size_t DeviceStride;
+    //checkCudaErrors(cudaMallocPitch((void **)&dst_DCT, &DeviceStride, Size.width * sizeof(float), Size.height));	
 
 	
 	
     //perform block-wise DCT processing and benchmarking
-	myDCT(dst, LaplaceArray, sizeX, sizeY);
-	//DeviceMemOutDCT("DCT.256.256.raw", dst, sizeX, sizeY);
+	myDCT(dst_DCT, LaplaceArray, sizeX, sizeY);
+	//DeviceMemOutDCT("DCT.256.256.raw", dst_DCT, sizeX, sizeY);
 	//solve the Poission's equation
 	s_unwrap = clock();
-	devConstant<<<grid,block>>>(dst, sizeX, sizeY);
+	devConstant<<<grid,block>>>(dst_DCT, sizeX, sizeY);
 	e_unwrap = clock(); unwrap_time += e_unwrap - s_unwrap;
-	//DeviceMemOutDCT("DCT2.256.256.raw", dst, sizeX, sizeY);
+	//DeviceMemOutDCT("DCT2.256.256.raw", dst_DCT, sizeX, sizeY);
     //perform block-wise IDCT processing
-	myIDCT(ImgDst, dst, sizeX, sizeY);
+	myIDCT(ImgDst, dst_DCT, sizeX, sizeY);
 	//DeviceMemOutDCT("IDCT.256.256.raw", ImgDst, sizeX, sizeY);
 	
 
-    //clean up memory
-    checkCudaErrors(cudaFree(LaplaceArray));
-	checkCudaErrors(cudaFree(inX));
-	checkCudaErrors(cudaFree(inY));
-	//checkCudaErrors(cudaFree(outX));
-	//checkCudaErrors(cudaFree(outY));
-	checkCudaErrors(cudaFree(dst));
+    
 }
 //--------------------------------------------------------------------------------------
 void myDCT(float *ImgDst, float *ImgSrc, int sizeX, int sizeY)
-{
-	cufftComplex *dSrc;
-	cudaMalloc((void **)&dSrc, sizeof(cufftComplex)*(sizeX*2)*sizeY);
-
+{	
 	//copy the floating array to cufftComplex
 	dim3 dimGrid(sizeX / TILE_DIM, sizeY / TILE_DIM, 1);
 	dim3 dimBlock(TILE_DIM, BLOCK_ROWS, 1);	
@@ -88,26 +75,25 @@ void myDCT(float *ImgDst, float *ImgSrc, int sizeX, int sizeY)
 
 	s_unwrap = clock();
 	//DCT on x-axis
-	float2cufft << <grid, block >> >(dSrc, ImgSrc, sizeX, sizeY);
+	float2cufft << <grid, block >> >(dSrc_DCT_FORWARD, ImgSrc, sizeX, sizeY);
 	//cuFFT1D(dSrc, sizeX*2, sizeY, -1);	
-	cufftExecC2C(plan_1D_C2C_FORWARD, dSrc, dSrc, CUFFT_FORWARD);
-	countFDCT << <grid, block >> >(ImgDst, dSrc, sizeX, sizeY, 1 / sqrtf(2 *sizeY));
+	cufftExecC2C(plan_1D_C2C_FORWARD, dSrc_DCT_FORWARD, dSrc_DCT_FORWARD, CUFFT_FORWARD);
+	countFDCT << <grid, block >> >(ImgDst, dSrc_DCT_FORWARD, sizeX, sizeY, 1 / sqrtf(2 *sizeY));
 	transposeShared << <dimGrid, dimBlock >> >(ImgSrc, ImgDst);
 
 	//DCT on y-axis	
-	float2cufft << <grid, block >> >(dSrc, ImgSrc, sizeX, sizeY);
+	float2cufft << <grid, block >> >(dSrc_DCT_FORWARD, ImgSrc, sizeX, sizeY);
 	//cuFFT1D(dSrc, sizeY*2, sizeX, -1);
-	cufftExecC2C(plan_1D_C2C_FORWARD, dSrc, dSrc, CUFFT_FORWARD);
-	countFDCT << <grid, block >> >(ImgSrc, dSrc, sizeY, sizeX, 1 / sqrtf(2 *sizeY));
+	cufftExecC2C(plan_1D_C2C_FORWARD, dSrc_DCT_FORWARD, dSrc_DCT_FORWARD, CUFFT_FORWARD);
+	countFDCT << <grid, block >> >(ImgSrc, dSrc_DCT_FORWARD, sizeY, sizeX, 1 / sqrtf(2 *sizeY));
 	transposeShared << <dimGrid, dimBlock >> >(ImgDst, ImgSrc);
 	e_unwrap = clock(); unwrap_time += e_unwrap - s_unwrap;
-	cudaFree(dSrc);	
+	
 }
 //--------------------------------------------------------------------------------------
 void myIDCT(float *ImgDst, float *ImgSrc, int sizeX, int sizeY)
 {
-	cufftComplex *dSrc;
-	cudaMalloc((void **)&dSrc, sizeof(cufftComplex)*(sizeX * 2)*sizeY);
+	
 
 	//copy the floating array to cufftComplex
 	dim3 dimGrid(sizeX / TILE_DIM, sizeY / TILE_DIM, 1);
@@ -121,22 +107,22 @@ void myIDCT(float *ImgDst, float *ImgSrc, int sizeX, int sizeY)
 	s_unwrap = clock();
 	//IDCT on x-axis
 	transposeShared << <dimGrid, dimBlock >> >(ImgDst, ImgSrc);	
-	countIDCT << <grid, block >> >(dSrc, ImgDst, sizeX, sizeY, 1/sqrtf(2 *sizeY));
+	countIDCT << <grid, block >> >(dSrc_DCT_INVERSE, ImgDst, sizeX, sizeY, 1/sqrtf(2 *sizeY));
 	//cuFFT1D(dSrc, sizeX * 2, sizeY, 2); 
-	cufftExecC2C(plan_1D_C2C_INVERSE, dSrc, dSrc, CUFFT_INVERSE);
-	cufft2float << <grid, block >> >(ImgSrc, dSrc, sizeX, sizeY);
+	cufftExecC2C(plan_1D_C2C_INVERSE, dSrc_DCT_INVERSE, dSrc_DCT_INVERSE, CUFFT_INVERSE);
+	cufft2float << <grid, block >> >(ImgSrc, dSrc_DCT_INVERSE, sizeX, sizeY);
 	
 	//IDCT on y-axis
 	transposeShared << <dimGrid, dimBlock >> >(ImgDst, ImgSrc);
-	countIDCT << <grid, block >> >(dSrc, ImgDst, sizeY, sizeX, 1/sqrtf(2 *sizeY));
+	countIDCT << <grid, block >> >(dSrc_DCT_INVERSE, ImgDst, sizeY, sizeX, 1/sqrtf(2 *sizeY));
 	//cuFFT1D(dSrc, sizeY * 2, sizeX, 2);	
-	cufftExecC2C(plan_1D_C2C_INVERSE, dSrc, dSrc, CUFFT_INVERSE);
-	cufft2float << <grid, block >> >(ImgDst, dSrc, sizeX, sizeY);
+	cufftExecC2C(plan_1D_C2C_INVERSE, dSrc_DCT_INVERSE, dSrc_DCT_INVERSE, CUFFT_INVERSE);
+	cufft2float << <grid, block >> >(ImgDst, dSrc_DCT_INVERSE, sizeX, sizeY);
 	//cudaMemcpy2D(ImgDst, 1 * sizeof(float), dSrc, sizeof(cufftComplex), sizeof(float), sizeX * sizeY, cudaMemcpyDeviceToDevice);
 
 	e_unwrap = clock(); unwrap_time += e_unwrap - s_unwrap;
 
-	cudaFree(dSrc);
+	
 }
 //--------------------------------------------------------------------------------------
 void DeviceMemOutDCTFFT(char *path, cufftComplex *arr, int sizeX, int sizeY)
