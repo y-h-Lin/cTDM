@@ -23,8 +23,8 @@ int CameraPosition = 1; //CameraPosition = 0; 表示為舊的架設
 size_t freeDeviceMemory;
 size_t totalDeviceMemory;
 
-int SpeedTestFlag = 0;
-int QPI_Method = 1;
+int SpeedTestFlag = 1;
+int QPI_Method = 0;
 int ResizeFlag = 1;
 int ReconFlag = 1;
 int ReconSave;
@@ -371,7 +371,7 @@ void HilbertTransform(char *SPDir, char *BGDir, char *AngDir, char *SaveDir,
 	sprintf(BG_img_Path, "%s\\Buffer1.bmp", BGDir);
 
 	int nrSP, ncSP, nrBG, ncBG, nrAng, ncAng;
-	int Nx, Ny, Nx2, Ny2;
+	
 	bmp_header(SP_img_Path, nrSP, ncSP);
 	bmp_header(BG_img_Path, nrBG, ncBG);
 
@@ -477,48 +477,48 @@ void HilbertTransform(char *SPDir, char *BGDir, char *AngDir, char *SaveDir,
 		
 	}
 	
-	cudaMalloc((void **)&cuPhaseMap, sizeof(float)*Nx *Ny);
-	cudaMalloc((void **)&cuAmpMap, sizeof(float)*Nx *Ny);
+	checkCudaErrors(cudaMalloc((void **)&cuPhaseMap, sizeof(float)*Nx *Ny));
+	checkCudaErrors(cudaMalloc((void **)&cuAmpMap, sizeof(float)*Nx *Ny));
 
-	/*switch (QPI_Method){
+	switch (QPI_Method) {
 	case 0:
-		cudaMalloc((void **)&cuSP2, sizeof(cufftComplex)*Nx2*Ny2);
-		cudaMalloc((void **)&cuBG2, sizeof(cufftComplex)*Nx2*Ny2);
-		cudaMalloc((void **)&SPWrapPhase2, sizeof(float)*Nx2*Ny2);
-		cudaMalloc((void **)&BGWrapPhase2, sizeof(float)*Nx2*Ny2);
-		cudaMalloc((void **)&UnWrapPhaseSP2, sizeof(float)*Nx2*Ny2);
-		cudaMalloc((void **)&UnWrapPhaseBG2, sizeof(float)*Nx2*Ny2);
-		cudaMalloc((void **)&cuPhaseMap2, sizeof(float)*Nx2*Ny2);
-		cudaMalloc((void **)&cuAmpMap2, sizeof(float)*Nx2*Ny2);
+		checkCudaErrors(cudaMalloc((void **)&cuSP2, sizeof(cufftComplex)*Nx2*Ny2));
+		checkCudaErrors(cudaMalloc((void **)&cuBG2, sizeof(cufftComplex)*Nx2*Ny2));
+		checkCudaErrors(cudaMalloc((void **)&SPWrapPhase2, sizeof(float)*Nx2*Ny2));
+		checkCudaErrors(cudaMalloc((void **)&BGWrapPhase2, sizeof(float)*Nx2*Ny2));
+		checkCudaErrors(cudaMalloc((void **)&UnWrapPhaseSP2, sizeof(float)*Nx2*Ny2));
+		checkCudaErrors(cudaMalloc((void **)&UnWrapPhaseBG2, sizeof(float)*Nx2*Ny2));
+		checkCudaErrors(cudaMalloc((void **)&cuPhaseMap2, sizeof(float)*Nx2*Ny2));
+		checkCudaErrors(cudaMalloc((void **)&cuAmpMap2, sizeof(float)*Nx2*Ny2));
 		break;
 	case 1:
-		cudaMalloc((void **)&cuSP, sizeof(cufftComplex)*Nx *Ny);
-		cudaMalloc((void **)&cuBG, sizeof(cufftComplex)*Nx *Ny);
-		cudaMalloc((void **)&cuSP2, sizeof(cufftComplex)*Nx2*Ny2);
-		cudaMalloc((void **)&cuBG2, sizeof(cufftComplex)*Nx2*Ny2);
-		cudaMalloc((void **)&SPWrapPhase2, sizeof(float)*Nx2*Ny2);
-		cudaMalloc((void **)&BGWrapPhase2, sizeof(float)*Nx2*Ny2);
-		cudaMalloc((void **)&UnWrapPhaseSP2, sizeof(float)*Nx2*Ny2);
-		cudaMalloc((void **)&UnWrapPhaseBG2, sizeof(float)*Nx2*Ny2);
-		cudaMalloc((void **)&cuPhaseMap2, sizeof(float)*Nx2*Ny2);
-		cudaMalloc((void **)&cuAmpMap2, sizeof(float)*Nx2*Ny2);
+		checkCudaErrors(cudaMalloc((void **)&cuSP, sizeof(cufftComplex)*Nx *Ny));
+		checkCudaErrors(cudaMalloc((void **)&cuBG, sizeof(cufftComplex)*Nx *Ny));
+		checkCudaErrors(cudaMalloc((void **)&cuSP2, sizeof(cufftComplex)*Nx2*Ny2));
+		checkCudaErrors(cudaMalloc((void **)&cuBG2, sizeof(cufftComplex)*Nx2*Ny2));
+		checkCudaErrors(cudaMalloc((void **)&SPWrapPhase2, sizeof(float)*Nx2*Ny2));
+		checkCudaErrors(cudaMalloc((void **)&BGWrapPhase2, sizeof(float)*Nx2*Ny2));
+		checkCudaErrors(cudaMalloc((void **)&UnWrapPhaseSP2, sizeof(float)*Nx2*Ny2));
+		checkCudaErrors(cudaMalloc((void **)&UnWrapPhaseBG2, sizeof(float)*Nx2*Ny2));
+		checkCudaErrors(cudaMalloc((void **)&cuPhaseMap2, sizeof(float)*Nx2*Ny2));
+		checkCudaErrors(cudaMalloc((void **)&cuAmpMap2, sizeof(float)*Nx2*Ny2));
 		break;
 	case 2:
-		cudaMalloc((void **)&cuSP, sizeof(cufftComplex)*Nx *Ny);
-		cudaMalloc((void **)&cuBG, sizeof(cufftComplex)*Nx *Ny);
-		cudaMalloc((void **)&selectSP, sizeof(cufftComplex)*Nx *Ny);
-		cudaMalloc((void **)&selectBG, sizeof(cufftComplex)*Nx *Ny);		
-		cudaMalloc((void **)&circleImg, sizeof(int)*Nx*Ny);
+		checkCudaErrors(cudaMalloc((void **)&cuSP, sizeof(cufftComplex)*Nx *Ny));
+		checkCudaErrors(cudaMalloc((void **)&cuBG, sizeof(cufftComplex)*Nx *Ny));
+		checkCudaErrors(cudaMalloc((void **)&selectSP, sizeof(cufftComplex)*Nx *Ny));
+		checkCudaErrors(cudaMalloc((void **)&selectBG, sizeof(cufftComplex)*Nx *Ny));
+		checkCudaErrors(cudaMalloc((void **)&circleImg, sizeof(int)*Nx*Ny));
 
-		cudaMalloc((void **)&SPWrapPhase, sizeof(float)*Nx *Ny);
-		cudaMalloc((void **)&BGWrapPhase, sizeof(float)*Nx *Ny);
-		cudaMalloc((void **)&UnWrapPhaseSP, sizeof(float)*Nx *Ny);
-		cudaMalloc((void **)&UnWrapPhaseBG, sizeof(float)*Nx *Ny);
+		checkCudaErrors(cudaMalloc((void **)&SPWrapPhase, sizeof(float)*Nx *Ny));
+		checkCudaErrors(cudaMalloc((void **)&BGWrapPhase, sizeof(float)*Nx *Ny));
+		checkCudaErrors(cudaMalloc((void **)&UnWrapPhaseSP, sizeof(float)*Nx *Ny));
+		checkCudaErrors(cudaMalloc((void **)&UnWrapPhaseBG, sizeof(float)*Nx *Ny));
 		break;
-	}*/
+	}
 	
 	//case 0
-	cudaMalloc((void **)&cuSP2, sizeof(cufftComplex)*Nx2*Ny2);		//0&1
+	/*cudaMalloc((void **)&cuSP2, sizeof(cufftComplex)*Nx2*Ny2);		//0&1
 	cudaMalloc((void **)&cuBG2, sizeof(cufftComplex)*Nx2*Ny2);		//0&1
 	cudaMalloc((void **)&SPWrapPhase2, sizeof(float)*Nx2*Ny2);		//0&1
 	cudaMalloc((void **)&BGWrapPhase2, sizeof(float)*Nx2*Ny2);		//0&1
@@ -539,39 +539,39 @@ void HilbertTransform(char *SPDir, char *BGDir, char *AngDir, char *SaveDir,
 	cudaMalloc((void **)&SPWrapPhase, sizeof(float)*Nx *Ny);
 	cudaMalloc((void **)&BGWrapPhase, sizeof(float)*Nx *Ny);
 	cudaMalloc((void **)&UnWrapPhaseSP, sizeof(float)*Nx *Ny);
-	cudaMalloc((void **)&UnWrapPhaseBG, sizeof(float)*Nx *Ny);
+	cudaMalloc((void **)&UnWrapPhaseBG, sizeof(float)*Nx *Ny);*/
 
 	// create the plans for Forward/Inverse cuFFT
-	cufftPlan1d(&plan_1D_C2C_FORWARD, Ny2 * 2, CUFFT_C2C, Nx2);
-	cufftPlan1d(&plan_1D_C2C_INVERSE, Nx2 * 2, CUFFT_C2C, Ny2);
-	cufftPlan1d(&plan_1D_C2C_FORWARD_FT, Nx, CUFFT_C2C, Ny / 4);
-	cufftPlan1d(&plan_1D_C2C_INVERSE_FT, Nx / 4, CUFFT_C2C, Ny / 4);
+	checkCudaErrors(cufftPlan1d(&plan_1D_C2C_FORWARD, Ny2 * 2, CUFFT_C2C, Nx2));
+	checkCudaErrors(cufftPlan1d(&plan_1D_C2C_INVERSE, Nx2 * 2, CUFFT_C2C, Ny2));
+	checkCudaErrors(cufftPlan1d(&plan_1D_C2C_FORWARD_FT, Nx, CUFFT_C2C, Ny / 4));
+	checkCudaErrors(cufftPlan1d(&plan_1D_C2C_INVERSE_FT, Nx / 4, CUFFT_C2C, Ny / 4));
 
-	cufftPlan2d(&plan_2D_C2C_FORWARD_s1, Nx, Ny, CUFFT_C2C);
-	cufftPlan2d(&plan_2D_C2C_FORWARD_s2, Nx2, Ny2, CUFFT_C2C);
-	cufftPlan2d(&plan_2D_C2C_INVERSE_s1, Nx, Ny, CUFFT_C2C);
-	cufftPlan2d(&plan_2D_C2C_INVERSE_s2, Nx2, Ny2, CUFFT_C2C);
+	checkCudaErrors(cufftPlan2d(&plan_2D_C2C_FORWARD_s1, Nx, Ny, CUFFT_C2C));
+	checkCudaErrors(cufftPlan2d(&plan_2D_C2C_FORWARD_s2, Nx2, Ny2, CUFFT_C2C));
+	checkCudaErrors(cufftPlan2d(&plan_2D_C2C_INVERSE_s1, Nx, Ny, CUFFT_C2C));
+	checkCudaErrors(cufftPlan2d(&plan_2D_C2C_INVERSE_s2, Nx2, Ny2, CUFFT_C2C));
 
-	cufftPlan2d(&plan_2D_C2C_FORWARD_FTUP, Nx2/2, Ny2/2, CUFFT_C2C);
-	cufftPlan2d(&plan_2D_C2C_INVERSE_FTUP, Nx2 / 2, Ny2 / 2, CUFFT_C2C);
+	checkCudaErrors(cufftPlan2d(&plan_2D_C2C_FORWARD_FTUP, Nx2/2, Ny2/2, CUFFT_C2C));
+	checkCudaErrors(cufftPlan2d(&plan_2D_C2C_INVERSE_FTUP, Nx2 / 2, Ny2 / 2, CUFFT_C2C));
 
 	//calculating the wrapped phase in GPU by Algorithm B
-	cudaMalloc((void **)&cuSP_PE_temp, sizeof(float)*Nx *Ny);
-	cudaMalloc((void **)&cuBG_PE_temp, sizeof(float)*Nx *Ny);
-	cudaMalloc((void **)&cuSP_PE_resample, sizeof(float)*Nx*(Ny / 4));
-	cudaMalloc((void **)&cuBG_PE_resample, sizeof(float)*Nx*(Ny / 4));
-	cudaMalloc((void **)&device_PE_FFT, sizeof(cufftComplex)*Nx*(Ny / 4));
-	cudaMalloc((void **)&out_PE_FFT, sizeof(cufftComplex)*(Nx / 4)*(Ny / 4));
-	cudaMalloc((void **)&sumFFT_PE_1D, sizeof(float)*Nx);
+	checkCudaErrors(cudaMalloc((void **)&cuSP_PE_temp, sizeof(float)*Nx *Ny));
+	checkCudaErrors(cudaMalloc((void **)&cuBG_PE_temp, sizeof(float)*Nx *Ny));
+	checkCudaErrors(cudaMalloc((void **)&cuSP_PE_resample, sizeof(float)*Nx*(Ny / 4)));
+	checkCudaErrors(cudaMalloc((void **)&cuBG_PE_resample, sizeof(float)*Nx*(Ny / 4)));
+	checkCudaErrors(cudaMalloc((void **)&device_PE_FFT, sizeof(cufftComplex)*Nx*(Ny / 4)));
+	checkCudaErrors(cudaMalloc((void **)&out_PE_FFT, sizeof(cufftComplex)*(Nx / 4)*(Ny / 4)));
+	checkCudaErrors(cudaMalloc((void **)&sumFFT_PE_1D, sizeof(float)*Nx));
 
 	//DCT phase unwrapping
-	cudaMalloc((void **)&LaplaceArray, sizeof(float)*(Nx / 4)*(Ny / 4));
-	cudaMalloc((void **)&inX, sizeof(float)*(Nx / 4)*(Ny / 4));
-	cudaMalloc((void **)&inY, sizeof(float)*(Nx / 4)*(Ny / 4));
+	checkCudaErrors(cudaMalloc((void **)&LaplaceArray, sizeof(float)*(Nx / 4)*(Ny / 4)));
+	checkCudaErrors(cudaMalloc((void **)&inX, sizeof(float)*(Nx / 4)*(Ny / 4)));
+	checkCudaErrors(cudaMalloc((void **)&inY, sizeof(float)*(Nx / 4)*(Ny / 4)));
 	size_t DeviceStride;
 	checkCudaErrors(cudaMallocPitch((void **)&dst_DCT, &DeviceStride, (Nx / 4) * sizeof(float), (Ny / 4)));
-	cudaMalloc((void **)&dSrc_DCT_FORWARD, sizeof(cufftComplex)*((Nx / 4) * 2)*(Ny / 4));
-	cudaMalloc((void **)&dSrc_DCT_INVERSE, sizeof(cufftComplex)*((Nx / 4) * 2)*(Ny / 4));
+	checkCudaErrors(cudaMalloc((void **)&dSrc_DCT_FORWARD, sizeof(cufftComplex)*((Nx / 4) * 2)*(Ny / 4)));
+	checkCudaErrors(cudaMalloc((void **)&dSrc_DCT_INVERSE, sizeof(cufftComplex)*((Nx / 4) * 2)*(Ny / 4)));
 
 	//calculating the wrapped phase in GPU by Algorithm A
 
@@ -610,6 +610,7 @@ void HilbertTransform(char *SPDir, char *BGDir, char *AngDir, char *SaveDir,
 
 		//Read All Images
 		if (SpeedTestFlag == 1) {
+#pragma omp parallel for
 			for (int frame = 1; frame <= totalFrame; frame++)
 			{
 				double SampleAngleDegX = 0.0, SampleAngleDegY = 0.0;
@@ -633,6 +634,7 @@ void HilbertTransform(char *SPDir, char *BGDir, char *AngDir, char *SaveDir,
 					if (stY.st_mode & S_IFDIR != 0)
 						exsit_AngY = 1;
 #endif
+
 				if (exsit_AngX != -1 && exsit_AngY != -1)
 				{
 					sprintf(Ang_img_Path_X, "%s\\X\\Buffer%d.bmp", AngDir, frame);
@@ -766,11 +768,12 @@ void HilbertTransform(char *SPDir, char *BGDir, char *AngDir, char *SaveDir,
 				sampleAngleRadX_Stack[frame - 1] = AngCal_GPU(AngImgX, Nx, Ny, frame, totalFrame);
 				sampleAngleRadY_Stack[frame - 1] = exsit_AngY != -1 ? AngCal_GPU(AngImgY, Nx, Ny, frame, totalFrame) : 0;
 			}
+#pragma omp barrier
 		}
 
 		//Start Reconstruction
-		AccumFrame = 0;
 		start_time = clock();
+		AccumFrame = 0;		
 		wrap_time = 0;
 		unwrap_time = 0;
 		extract_time = 0;
@@ -778,7 +781,7 @@ void HilbertTransform(char *SPDir, char *BGDir, char *AngDir, char *SaveDir,
 		PrintProcess(0, SPDir, BGDir, AngDir);
 
 		//for(int frame=1;frame<=1;frame++)
-		int rCircle = 0, cCircle = 0, radiusCircle = 0;
+		rCircle = 0, cCircle = 0, radiusCircle = 0;
 		for (int frame = 1; frame <= totalFrame; frame++)
 		{
 			if (!SpeedTestFlag) {
@@ -810,7 +813,7 @@ void HilbertTransform(char *SPDir, char *BGDir, char *AngDir, char *SaveDir,
 				case 0:
 					if (nrSP == Nx && ncSP == Ny)
 					{
-
+#pragma omp parallel for
 						for (int j = 0; j < Ny; j++)
 							for (int i = 0; i < Nx; i++) {
 								SP_float[j + i*Ny] = (float)SPImgTemp[j + i*Ny];
@@ -818,11 +821,14 @@ void HilbertTransform(char *SPDir, char *BGDir, char *AngDir, char *SaveDir,
 
 								AngImgX[i + j*Nx] = (float)AngImgTempX[j + i*Ny];
 							}
+#pragma omp barrier
 
 						if (exsit_AngX != -1 && exsit_AngY != -1) {
+#pragma omp parallel for
 							for (int j = 0; j < colSize; j++)
 								for (int i = 0; i < rowSize; i++)
 									AngImgY[j + i*colSize] = (float)AngImgTempY[i + j*rowSize];
+#pragma omp barrier
 						}
 
 						//計算df 
@@ -831,6 +837,7 @@ void HilbertTransform(char *SPDir, char *BGDir, char *AngDir, char *SaveDir,
 					}
 					else if (nrSP == Nx / 2 && ncSP == Ny / 2)//影像大小邊長皆除以2
 					{
+#pragma omp parallel for
 						for (int j = 0; j < Ny; j++)
 							for (int i = 0; i < Nx; i++) {
 								SP_float[j + i*Ny] = (float)SPImgTemp[j * 2 + i * 2 * Ny];
@@ -838,11 +845,14 @@ void HilbertTransform(char *SPDir, char *BGDir, char *AngDir, char *SaveDir,
 
 								AngImgX[i + j*Nx] = (float)AngImgTempX[j * 2 + i * 2 * Ny];
 							}
+#pragma omp barrier
 
 						if (exsit_AngX != -1 && exsit_AngY != -1) {
+#pragma omp parallel for
 							for (int j = colPts[0]; j < colPts[1]; j++)
 								for (int i = rowPts[0]; i < rowPts[1]; i++)
 									AngImgY[i + j*Nx] = (float)AngImgTempY[j * 2 + i * 2 * Ny];
+#pragma omp barrier
 						}
 
 						//計算df 
@@ -862,6 +872,7 @@ void HilbertTransform(char *SPDir, char *BGDir, char *AngDir, char *SaveDir,
 					//影像轉移
 					if (nrSP == Nx && ncSP == Ny)
 					{
+#pragma omp parallel for
 						for (int j = 0; j < Ny; j++)
 							for (int i = 0; i < Nx; i++)
 							{
@@ -873,12 +884,15 @@ void HilbertTransform(char *SPDir, char *BGDir, char *AngDir, char *SaveDir,
 
 								AngImgX[i + j*Nx] = (float)AngImgTempX[j + i*Ny];
 							}
+#pragma omp barrier
 
 						if (exsit_AngX != -1 && exsit_AngY != -1)
 						{
+#pragma omp parallel for
 							for (int j = 0; j < colSize; j++)
 								for (int i = 0; i < rowSize; i++)
 									AngImgY[j + i*colSize] = (float)AngImgTempY[i + j*rowSize];
+#pragma omp barrier
 						}
 
 						//計算df 
@@ -887,6 +901,7 @@ void HilbertTransform(char *SPDir, char *BGDir, char *AngDir, char *SaveDir,
 					}
 					else if (nrSP == Nx / 2 && ncSP == Ny / 2)//影像大小邊長皆除以2
 					{
+#pragma omp parallel for
 						for (int j = 0; j < Ny; j++)
 							for (int i = 0; i < Nx; i++)
 							{
@@ -898,12 +913,15 @@ void HilbertTransform(char *SPDir, char *BGDir, char *AngDir, char *SaveDir,
 
 								AngImgX[i + j*Nx] = (float)AngImgTempX[j * 2 + i * 2 * Ny];
 							}
+#pragma omp barrier
 
 						if (exsit_AngX != -1 && exsit_AngY != -1)
 						{
+#pragma omp parallel for
 							for (int j = colPts[0]; j < colPts[1]; j++)
 								for (int i = rowPts[0]; i < rowPts[1]; i++)
 									AngImgY[i + j*Nx] = (float)AngImgTempY[j * 2 + i * 2 * Ny];
+#pragma omp barrier
 
 						}
 
@@ -934,52 +952,30 @@ void HilbertTransform(char *SPDir, char *BGDir, char *AngDir, char *SaveDir,
 			case 0:				
 				if (SpeedTestFlag == 1)
 				{
-					extractQPI(SP_float_All[frame - 1], BG_float_All[frame - 1], cuSP2, cuBG2, Nx, Ny);
+					extractQPI_AlgorithmB(SP_float_All[frame - 1], BG_float_All[frame - 1], cuSP2, cuBG2, Nx, Ny, frame);
 				}
 				else
 				{
-					sF_time = clock();
-					extractQPI(SP_float, BG_float, cuSP2, cuBG2, Nx, Ny);
+					extractQPI_AlgorithmB(SP_float, BG_float, cuSP2, cuBG2, Nx, Ny, frame);
 				}
+
+				s_wrap = clock();
+				calcWrapPhase << <grid3, block3 >> > (UnWrapPhaseSP2, cuAmpMap2, cuSP2, cuBG2, Nx2, Ny2);
+				e_wrap = clock();	wrap_time += e_wrap - s_wrap;
+
 				break;
 			case 1:
 				if (SpeedTestFlag == 1) {
-					cudaMemcpy(cuSP, SP_cu_All[frame - 1], sizeof(cufftComplex)*Nx*Ny, cudaMemcpyHostToDevice);
-					cudaMemcpy(cuBG, BG_cu_All[frame - 1], sizeof(cufftComplex)*Nx*Ny, cudaMemcpyHostToDevice);
+					extractQPI_AlgorithmA(SP_cu_All[frame - 1], BG_cu_All[frame - 1], cuSP2, cuBG2, Nx, Ny, frame);
 				}
 				else {
-					cudaMemcpy(cuSP, SP_cu, sizeof(cufftComplex)*Nx*Ny, cudaMemcpyHostToDevice);
-					cudaMemcpy(cuBG, BG_cu, sizeof(cufftComplex)*Nx*Ny, cudaMemcpyHostToDevice);
+					extractQPI_AlgorithmA(SP_cu, BG_cu, cuSP2, cuBG2, Nx, Ny, frame);
 				}
 
 				s_wrap = clock();
-				//foreward FFT 2D 				
-				//cuFFT2D(cuSP, Nx, Ny, -1);
-				//cuFFT2D(cuBG, Nx, Ny, -1);
-				cufftExecC2C(plan_2D_C2C_FORWARD_s1, cuSP, cuSP, CUFFT_FORWARD);
-				cufftExecC2C(plan_2D_C2C_FORWARD_s1, cuBG, cuBG, CUFFT_FORWARD);
-
-				//shift FFT 2D
-				cuFFT2Dshift << <grid2, block2 >> > (cuSP, Nx, Ny);
-				cuFFT2Dshift << <grid2, block2 >> > (cuBG, Nx, Ny);
+				calcWrapPhase << <grid3, block3 >> > (UnWrapPhaseSP2, cuAmpMap2, cuSP2, cuBG2, Nx2, Ny2);
 				e_wrap = clock();	wrap_time += e_wrap - s_wrap;
 
-				//estimate the circle center and radius
-				if (frame == 1) obtainRadius(cuBG, radiusCircle, rCircle, cCircle, Nx, Ny);
-
-				s_wrap = clock();
-				//withod zero-padding method <--> (N/4)*(N/4)
-				get1stOrder_new << <grid3, block3 >> > (cuSP2, cuSP, radiusCircle, rCircle, cCircle, Nx, Ny);	//Notice: selectSP/cuSP
-				get1stOrder_new << <grid3, block3 >> > (cuBG2, cuBG, radiusCircle, rCircle, cCircle, Nx, Ny);
-				cuFFT2Dshift << <grid4, block4 >> > (cuSP2, Nx2, Ny2);
-				cuFFT2Dshift << <grid4, block4 >> > (cuBG2, Nx2, Ny2);
-				//cuFFT2D(cuSP2, Nx2, Ny2, 1);
-				//cuFFT2D(cuBG2, Nx2, Ny2, 1);
-				cufftExecC2C(plan_2D_C2C_INVERSE_s2, cuSP2, cuSP2, CUFFT_INVERSE);
-				cufftExecC2C(plan_2D_C2C_INVERSE_s2, cuBG2, cuBG2, CUFFT_INVERSE);
-				scaleFFT2D << <grid3, block3 >> >(cuSP2, Nx2, Ny2, 1.f / (Nx2 * Ny2));
-				scaleFFT2D << <grid3, block3 >> >(cuBG2, Nx2, Ny2, 1.f / (Nx2 * Ny2));
-				e_wrap = clock();	wrap_time += e_wrap - s_wrap;
 				break;
 
 			case 2:
@@ -993,8 +989,6 @@ void HilbertTransform(char *SPDir, char *BGDir, char *AngDir, char *SaveDir,
 				}
 				s_wrap = clock();
 				//foreward FFT 2D 
-				//cuFFT2D(cuSP, Nx, Ny, -1);
-				//cuFFT2D(cuBG, Nx, Ny, -1);
 				cufftExecC2C(plan_2D_C2C_FORWARD_s1, cuSP, cuSP, CUFFT_FORWARD);
 				cufftExecC2C(plan_2D_C2C_FORWARD_s1, cuBG, cuBG, CUFFT_FORWARD);
 
@@ -1028,8 +1022,6 @@ void HilbertTransform(char *SPDir, char *BGDir, char *AngDir, char *SaveDir,
 				cuFFT2Dshift << <grid2, block2 >> > (cuBG, Nx, Ny);
 
 				//inverse FFT 2D
-				//cuFFT2D(cuSP, Nx, Ny, 1);
-				//cuFFT2D(cuBG, Nx, Ny, 1);
 				cufftExecC2C(plan_2D_C2C_INVERSE_s1, cuSP, cuSP, CUFFT_INVERSE);
 				cufftExecC2C(plan_2D_C2C_INVERSE_s1, cuBG, cuBG, CUFFT_INVERSE);
 				scaleFFT2D << <grid, block >> >(cuSP, Nx, Ny, 1.f / (Nx * Ny));
@@ -1043,14 +1035,10 @@ void HilbertTransform(char *SPDir, char *BGDir, char *AngDir, char *SaveDir,
 
 			}
 
+			// Phase unwrapping
 			switch (QPI_Method) {
 			case 0:
 			case 1:
-				
-				s_wrap = clock();
-				calcWrapPhase << <grid3, block3 >> > (UnWrapPhaseSP2, cuAmpMap2, cuSP2, cuBG2, Nx2, Ny2);
-				e_wrap = clock();	wrap_time += e_wrap - s_wrap;							
-
 				//UWLS				
 				//FastUnwrapping(UnWrapPhaseSP2, cuPhaseMap2, Nx2, Ny2);
 				DCT_UWLS_Unwrapped(cuPhaseMap2, UnWrapPhaseSP2, Nx2, Ny2);
@@ -1086,114 +1074,94 @@ void HilbertTransform(char *SPDir, char *BGDir, char *AngDir, char *SaveDir,
 
 			eE_time = clock();	extract_time += (eE_time - sE_time);
 
+			s_datatransfer = clock();
 			cudaMemcpy(FinalPhase, cuPhaseMap, sizeof(float)*Nx*Ny, cudaMemcpyDeviceToHost);
 			cudaMemcpy(FinalAmp, cuAmpMap, sizeof(float)*Nx*Ny, cudaMemcpyDeviceToHost);
+			e_datatransfer = clock();	dataTransfer_time += e_datatransfer - s_datatransfer;
 			//DCT_UWLS_Unwrapped(UnWrapPhaseSP2, SPWrapPhase2, Nx2, Ny2);
 			/*DeviceMemOut("test.256.256.raw", UnWrapPhaseSP2, Nx2, Ny2);*/
 			//Calibration
 			//phaseCalibration(FinalPhase, Nx, Ny);
 			//ampCalibration(FinalAmp, Nx, Ny);
 
-			bool status = true;
-			float *IdentifyArea;
-			if (ResizeFlag == 0)
-			{
-				IdentifyArea = (float *)malloc(Nx*Ny * sizeof(float));
-				for (int i = 0; i < Nx*Ny; i++)
-					IdentifyArea[i] = FinalPhase[i];
-
-				if (checkArray(IdentifyArea, 0.5, 5 * M_PI, Nx*Ny) == true)
+			if (!SpeedTestFlag) {
+				bool status = true;
+				float *IdentifyArea;
+				if (ResizeFlag == 0)
 				{
-					status = false;
-					deleteCount++;
-				}
-			}
-			else
-			{
-				IdentifyArea = (float *)malloc(Nx*Ny / 4 * sizeof(float));
-				for (int j = Ny / 4; j < Ny * 3 / 4; j++)
-					for (int i = Nx / 4; i < Nx * 3 / 4; i++)
-					{
-						IdentifyArea[(i - Nx / 4) + (j - Ny / 4) * Nx / 2] = FinalPhase[i + j*Nx];
-					}
-				/*
-				// setup arguments
-				typedef float T;
-				summary_stats_unary_op<T>  unary_op;
-				summary_stats_binary_op<T> binary_op;
-				summary_stats_data<T> init;
-				summary_stats_data<T> result;
+					IdentifyArea = (float *)malloc(Nx*Ny * sizeof(float));
 
-				// part2 (if Mask[i]>10 and src[i]>threshold)
-				thrust::device_vector<float> d_SP(cuPhaseMap, cuPhaseMap + Nx2*Ny2);
-				init.initialize();
-				result = thrust::transform_reduce(d_SP.begin(), d_SP.end(), unary_op, init, binary_op);
-				float sp_mean = result.mean;
-				float sp_std = sqrtf(result.variance_n());
-				cout << "SP_MAX:" << result.max << endl;
-				cout << "SP_MIN:" << result.min << endl;
-				thrust::device_vector<float> d_BG(UnWrapPhaseBG2, UnWrapPhaseBG2 + Nx2*Ny2);
-				init.initialize();
-				result = thrust::transform_reduce(d_BG.begin(), d_BG.end(), unary_op, init, binary_op);
-				float bg_mean = result.mean;
-				float bg_std = sqrtf(result.variance_n());
-
-				cout << "SP  mean: " << sp_mean << "std: "<< sp_std<< endl;
-				cout << "BG  mean: " << bg_mean << "std: " << bg_std << endl;
-				system("pause");
-				*/
-				if (checkArray(IdentifyArea, criteriaSTD, criteriaRange, Nx*Ny / 4) == true)
-				{
-					status = false;
-					deleteCount++;
-				}
-			}
-			free(IdentifyArea);
-
-
-
-			//export the final data
 #pragma omp parallel for
-			for (int i = 0; i < Nx*Ny; i++)
-			{
-				ResultImg[i].phase = FinalPhase[i];
-				ResultImg[i].amp = FinalAmp[i];
-			}
+					for (int i = 0; i < Nx*Ny; i++)
+						IdentifyArea[i] = FinalPhase[i];
+#pragma omp barrier
+
+					if (checkArray(IdentifyArea, 0.5, 5 * M_PI, Nx*Ny) == true)
+					{
+						status = false;
+						deleteCount++;
+					}
+				}
+				else
+				{
+					IdentifyArea = (float *)malloc(Nx*Ny / 4 * sizeof(float));
+
+#pragma omp parallel for
+					for (int j = Ny / 4; j < Ny * 3 / 4; j++)
+						for (int i = Nx / 4; i < Nx * 3 / 4; i++)
+						{
+							IdentifyArea[(i - Nx / 4) + (j - Ny / 4) * Nx / 2] = FinalPhase[i + j*Nx];
+						}
+#pragma omp barrier
+
+					if (checkArray(IdentifyArea, criteriaSTD, criteriaRange, Nx*Ny / 4) == true)
+					{
+						status = false;
+						deleteCount++;
+					}
+				}
+				free(IdentifyArea);
+
+				//export the final data
+#pragma omp parallel for
+				for (int i = 0; i < Nx*Ny; i++)
+				{
+					ResultImg[i].phase = FinalPhase[i];
+					ResultImg[i].amp = FinalAmp[i];
+				}
 #pragma omp barrier
 
 
-			sprintf(Save_img_Path, "%s\\buffer%03d.phimap", SaveDir, frame);
-			outputImg(Save_img_Path, ResultImg, status, sampleAngleRadX_Stack[frame - 1], sampleAngleRadY_Stack[frame - 1], Nx, Ny);
+				sprintf(Save_img_Path, "%s\\buffer%03d.phimap", SaveDir, frame);
+				outputImg(Save_img_Path, ResultImg, status, sampleAngleRadX_Stack[frame - 1], sampleAngleRadY_Stack[frame - 1], Nx, Ny);				
 
+				//copy to ReconStack
+				if (ReconFlag == 1)
+				{
+					status_series[frame - 1] = status;
+					//sampleAngleRadX_Stack[frame - 1] = SampleAngleDegX;
+					//sampleAngleRadY_Stack[frame - 1] = SampleAngleDegY;
+					Combine2Stack(PhaseStack, AmpStack, ResultImg, Nx, Ny, frame - 1);
+				}
+
+				if (SavePhaseStack == 1)
+				{
+					sprintf(Save_img_Path, "%s\\Phase%03d_%dx%d.raw", SaveDir, frame, Nx, Ny);
+					FILE *fp = fopen(Save_img_Path, "wb");
+					fwrite(FinalPhase, sizeof(float), Nx*Ny, fp);
+					fclose(fp);
+				}
+
+				if (SaveAmpStack == 1)
+				{
+					sprintf(Save_img_Path, "%s\\Amp%03d_%dx%d.raw", SaveDir, frame, Nx, Ny);
+					FILE *fp = fopen(Save_img_Path, "wb");
+					fwrite(FinalAmp, sizeof(float), Nx*Ny, fp);
+					fclose(fp);
+				}
+			}
 			AccumFrame++;
 			PrintProcess(frame, SPDir, BGDir, AngDir);
-
-			//copy to ReconStack
-			if (ReconFlag == 1)
-			{
-				status_series[frame - 1] = status;
-				//sampleAngleRadX_Stack[frame - 1] = SampleAngleDegX;
-				//sampleAngleRadY_Stack[frame - 1] = SampleAngleDegY;
-				Combine2Stack(PhaseStack, AmpStack, ResultImg, Nx, Ny, frame - 1);
-			}
-
-			if (SavePhaseStack == 1)
-			{
-				sprintf(Save_img_Path, "%s\\Phase%03d_%dx%d.raw", SaveDir, frame, Nx, Ny);
-				FILE *fp = fopen(Save_img_Path, "wb");
-				fwrite(FinalPhase, sizeof(float), Nx*Ny, fp);
-				fclose(fp);
-			}
-
-			if (SaveAmpStack == 1)
-			{
-				sprintf(Save_img_Path, "%s\\Amp%03d_%dx%d.raw", SaveDir, frame, Nx, Ny);
-				FILE *fp = fopen(Save_img_Path, "wb");
-				fwrite(FinalAmp, sizeof(float), Nx*Ny, fp);
-				fclose(fp);
-			}
-
-			
 		}
 		system("pause");
 
@@ -1302,34 +1270,34 @@ void HilbertTransform(char *SPDir, char *BGDir, char *AngDir, char *SaveDir,
 	free(sampleAngleRadY_Stack);
 
 	//release device memory
-	cudaFree(circleImg);
-	cudaFree(cuSP);
-	cudaFree(cuBG);
-	cudaFree(cuSP2);
-	cudaFree(cuBG2);
-	cudaFree(selectSP);
-	cudaFree(selectBG);
-	cudaFree(SPWrapPhase);
-	cudaFree(BGWrapPhase);
-	cudaFree(SPWrapPhase2);
-	cudaFree(BGWrapPhase2);
-	cudaFree(UnWrapPhaseSP);
-	cudaFree(UnWrapPhaseBG);
-	cudaFree(UnWrapPhaseSP2);
-	cudaFree(UnWrapPhaseBG2);
-	cudaFree(cuPhaseMap);
-	cudaFree(cuAmpMap);
-	cudaFree(cuPhaseMap2);
-	cudaFree(cuAmpMap2);
+	checkCudaErrors(cudaFree(circleImg));
+	checkCudaErrors(cudaFree(cuSP));
+	checkCudaErrors(cudaFree(cuBG));
+	checkCudaErrors(cudaFree(cuSP2));
+	checkCudaErrors(cudaFree(cuBG2));
+	checkCudaErrors(cudaFree(selectSP));
+	checkCudaErrors(cudaFree(selectBG));
+	checkCudaErrors(cudaFree(SPWrapPhase));
+	checkCudaErrors(cudaFree(BGWrapPhase));
+	checkCudaErrors(cudaFree(SPWrapPhase2));
+	checkCudaErrors(cudaFree(BGWrapPhase2));
+	checkCudaErrors(cudaFree(UnWrapPhaseSP));
+	checkCudaErrors(cudaFree(UnWrapPhaseBG));
+	checkCudaErrors(cudaFree(UnWrapPhaseSP2));
+	checkCudaErrors(cudaFree(UnWrapPhaseBG2));
+	checkCudaErrors(cudaFree(cuPhaseMap));
+	checkCudaErrors(cudaFree(cuAmpMap));
+	checkCudaErrors(cudaFree(cuPhaseMap2));
+	checkCudaErrors(cudaFree(cuAmpMap2));
 
 	//sequence1DFFT
-	cudaFree(cuSP_PE_temp);
-	cudaFree(cuBG_PE_temp);
-	cudaFree(cuSP_PE_resample);
-	cudaFree(cuBG_PE_resample);
-	cudaFree(device_PE_FFT);
-	cudaFree(sumFFT_PE_1D);
-	cudaFree(out_PE_FFT);
+	checkCudaErrors(cudaFree(cuSP_PE_temp));
+	checkCudaErrors(cudaFree(cuBG_PE_temp));
+	checkCudaErrors(cudaFree(cuSP_PE_resample));
+	checkCudaErrors(cudaFree(cuBG_PE_resample));
+	checkCudaErrors(cudaFree(device_PE_FFT));
+	checkCudaErrors(cudaFree(sumFFT_PE_1D));
+	checkCudaErrors(cudaFree(out_PE_FFT));
 
 	//DCT
 	//clean up memory
@@ -1339,8 +1307,8 @@ void HilbertTransform(char *SPDir, char *BGDir, char *AngDir, char *SaveDir,
 	//checkCudaErrors(cudaFree(outX));
 	//checkCudaErrors(cudaFree(outY));
 	checkCudaErrors(cudaFree(dst_DCT));
-	cudaFree(dSrc_DCT_FORWARD);
-	cudaFree(dSrc_DCT_INVERSE);
+	checkCudaErrors(cudaFree(dSrc_DCT_FORWARD));
+	checkCudaErrors(cudaFree(dSrc_DCT_INVERSE));
 	cudaDeviceReset();
 
 }
@@ -1575,7 +1543,48 @@ void RefreshStack(float *PhaseStack, float *AmpStack, bool *status_series, float
 	free(sampleAngleRadY_temp);	
 }
 //--------------------------------------------------------------------------------------
-void extractQPI(float *SP, float *BG, cufftComplex *cuSP_FFT, cufftComplex *cuBG_FFT, int Nx, int Ny)
+void extractQPI_AlgorithmA(cufftComplex *SP, cufftComplex *BG, cufftComplex *cuSP_FFT, cufftComplex *cuBG_FFT, int Nx, int Ny, int frame)
+{
+	dim3 grid2(blocksInX2, blocksInY2);
+	dim3 block2(32, 32);
+
+	dim3 grid3(blocksInX3, blocksInY3);
+	dim3 block3(32, 32);
+
+	dim3 grid4(blocksInX4, blocksInY4);
+	dim3 block4(32, 32);
+
+	s_datatransfer = clock();
+	cudaMemcpy(cuSP, SP, sizeof(cufftComplex)*Nx*Ny, cudaMemcpyHostToDevice);
+	cudaMemcpy(cuBG, BG, sizeof(cufftComplex)*Nx*Ny, cudaMemcpyHostToDevice);
+	e_datatransfer = clock();	dataTransfer_time += e_datatransfer - s_datatransfer;
+
+	s_wrap = clock();
+	//foreward FFT 2D
+	cufftExecC2C(plan_2D_C2C_FORWARD_s1, cuSP, cuSP, CUFFT_FORWARD);
+	cufftExecC2C(plan_2D_C2C_FORWARD_s1, cuBG, cuBG, CUFFT_FORWARD);
+
+	//shift FFT 2D
+	cuFFT2Dshift << <grid2, block2 >> > (cuSP, Nx, Ny);
+	cuFFT2Dshift << <grid2, block2 >> > (cuBG, Nx, Ny);
+
+	//estimate the circle center and radius
+	if (frame == 1) obtainRadius(cuBG, radiusCircle, rCircle, cCircle, Nx, Ny);
+
+	//withod zero-padding method <--> (N/4)*(N/4)
+	get1stOrder_new << <grid3, block3 >> > (cuSP2, cuSP, radiusCircle, rCircle, cCircle, Nx, Ny);	//Notice: selectSP/cuSP
+	get1stOrder_new << <grid3, block3 >> > (cuBG2, cuBG, radiusCircle, rCircle, cCircle, Nx, Ny);
+	cuFFT2Dshift << <grid4, block4 >> > (cuSP2, Nx2, Ny2);
+	cuFFT2Dshift << <grid4, block4 >> > (cuBG2, Nx2, Ny2);
+	cufftExecC2C(plan_2D_C2C_INVERSE_s2, cuSP2, cuSP2, CUFFT_INVERSE);
+	cufftExecC2C(plan_2D_C2C_INVERSE_s2, cuBG2, cuBG2, CUFFT_INVERSE);
+	scaleFFT2D << <grid3, block3 >> >(cuSP2, Nx2, Ny2, 1.f / (Nx2 * Ny2));
+	scaleFFT2D << <grid3, block3 >> >(cuBG2, Nx2, Ny2, 1.f / (Nx2 * Ny2));
+
+	e_wrap = clock();	wrap_time += e_wrap - s_wrap;
+}
+//--------------------------------------------------------------------------------------
+void extractQPI_AlgorithmB(float *SP, float *BG, cufftComplex *cuSP_FFT, cufftComplex *cuBG_FFT, int Nx, int Ny, int frame)
 {
 	dim3 grid(blocksInX, blocksInY3);
 	dim3 block(32, 32);	
@@ -1589,87 +1598,67 @@ void extractQPI(float *SP, float *BG, cufftComplex *cuSP_FFT, cufftComplex *cuBG
 	bilinear_interpolation_kernel << <grid, block >> >(cuSP_PE_resample, cuSP_PE_temp, cuBG_PE_resample, cuBG_PE_temp, Nx, Ny, Nx, Ny/4);
 	//bilinear_interpolation_kernel << <grid, block >> >(cuBG_resample, cuBG_temp, Nx, Ny, Nx, Ny/4);	
 
-	sequence1DFFT(cuSP_PE_resample, cuSP_FFT, Nx, Ny);
-	sequence1DFFT(cuBG_PE_resample, cuBG_FFT, Nx, Ny);
+	sequence1DFFT(cuSP_PE_resample, cuSP_FFT, Nx, Ny, frame);
+	sequence1DFFT(cuBG_PE_resample, cuBG_FFT, Nx, Ny, frame);
 	e_wrap = clock();	wrap_time += e_wrap - s_wrap;
 	//DeviceMemOut("cuSP_resample.1024.256.raw", cuSP_resample, Nx, Ny / 4);	
 	
 }
 //--------------------------------------------------------------------------------------
-void sequence1DFFT(float *ResampleArray, cufftComplex *out_array, int Nx, int Ny)
+void sequence1DFFT(float *ResampleArray, cufftComplex *out_array, int Nx, int Ny, int frame)
 {
 	//int blocksInX = (Nx / 2 + 32 - 1) / 32;
 	//int blocksInY = (Ny / 4 + 32 - 1) / 32;
 	dim3 grid(blocksInX2, blocksInY3);
 	dim3 block(32, 32);
-
-	//host memory
-	//cufftComplex *host_FFT = (cufftComplex *)malloc(Nx * (Ny / 4) * sizeof(cufftComplex));
-	//cufftComplex *host_out = (cufftComplex *)malloc((Nx / 4)*(Ny / 4) *sizeof(cufftComplex));
-	//device memory
 	
-	
-	cudaMemset(sumFFT_PE_1D, 0, Nx*sizeof(float));
-
 	//copy the floating array to cufftComplex
 	dim3 dimGrid(Nx / TILE_DIM, Ny /4 / TILE_DIM, 1);
 	dim3 dimBlock(TILE_DIM, BLOCK_ROWS, 1);
 	real2cufft << <dimGrid, dimBlock >> >(device_PE_FFT, ResampleArray);
-
-	//s_wrap = clock();
+	
 	//1D FFT
-	//cuFFT1D(device_FFT, Nx, Ny / 4, -1);	
 	cufftExecC2C(plan_1D_C2C_FORWARD_FT, device_PE_FFT, device_PE_FFT, CUFFT_FORWARD);
 	//DeviceMemOutFFT("D:\\device_FFT.1024.256.raw", device_FFT, Nx, Ny / 4);
 	
 	//crop the component from FT domain
-	
-
-	//s_wrap = clock();
 	shiftArray << <grid, block >> >(device_PE_FFT, Nx, Ny / 4);
-	HistogramFT << <(Nx + 1024 - 1) / 1024, 1024 >> >(sumFFT_PE_1D,device_PE_FFT,Nx, Ny/4);
-	//e_wrap = clock();	wrap_time += e_wrap - s_wrap;
 
-	//DeviceMemOut("D:\\sumFFT_1D.1024.1.raw", sumFFT_1D, Nx, 1);
-	//find out the maximum and its index
-	thrust::device_ptr<float> max_ptr = thrust::device_pointer_cast(sumFFT_PE_1D);
-	thrust::device_ptr<float> result_offset = thrust::max_element(max_ptr + int(Nx*0.6), max_ptr + Nx);
+	if (frame == 1)
+	{
+		cudaMemset(sumFFT_PE_1D, 0, Nx * sizeof(float));
+		HistogramFT << <(Nx + 1024 - 1) / 1024, 1024 >> > (sumFFT_PE_1D, device_PE_FFT, Nx, Ny / 4);
 
-	//float max_value = result_offset[0];
-	int max_idx = &result_offset[0] - &max_ptr[0];
-	//printf("\nMininum value = %f\n", max_value);
-	//printf("Position = %i\n", &result_offset[0] - &max_ptr[0]);
+		//DeviceMemOut("D:\\sumFFT_1D.1024.1.raw", sumFFT_1D, Nx, 1);
+		//find out the maximum and its index
+		thrust::device_ptr<float> max_ptr = thrust::device_pointer_cast(sumFFT_PE_1D);
+		thrust::device_ptr<float> result_offset = thrust::max_element(max_ptr + int(Nx*0.6), max_ptr + Nx);
 
-	//int blocksX2 = (Nx / 4 + 32 - 1) / 32;
-	//int blocksY2 = (Ny / 4 + 32 - 1) / 32;
+		//float max_value = result_offset[0];
+		max_idx_seq1D = &result_offset[0] - &max_ptr[0];
+		if (Nx - max_idx_seq1D < Nx2 / 2)	max_idx_seq1D = Nx - max_idx_seq1D;		
+		//printf("\nMininum value = %f\n", max_idx_seq1D);
+		//printf("Position = %i\n", &result_offset[0] - &max_ptr[0]);
+	}
+	
 	dim3 grid2(blocksInX3, blocksInY3);
 	dim3 block2(32, 32);
 
-	//int blocksX3 = (Nx / 8 + 32 - 1) / 32;
-	//int blocksY3 = (Ny / 4 + 32 - 1) / 32;
 	dim3 grid3(blocksInX4, blocksInY3);
 	dim3 block3(32, 32);
 
-	//s_wrap = clock();
-	CropFTdomain << <grid2, block2 >> >(device_PE_FFT, out_PE_FFT, Nx, Ny, max_idx);
+	CropFTdomain << <grid2, block2 >> >(device_PE_FFT, out_PE_FFT, Nx, Ny, max_idx_seq1D);
 	//DeviceMemOutFFT("out_FFT.256.256.raw", out_FFT, (Nx / 4), (Ny / 4));
 	shiftArray << <grid3, block3 >> >(out_PE_FFT, Nx / 4, Ny / 4);
+
 	//inverse FFT
-	//cuFFT1D(out_FFT, Nx / 4, Ny / 4, 1);
 	cufftExecC2C(plan_1D_C2C_INVERSE_FT, out_PE_FFT, out_PE_FFT, CUFFT_INVERSE);
-	//e_wrap = clock();	wrap_time += e_wrap - s_wrap;
 
 	//DeviceMemOutFFT("out_iFFT.256.256.raw", out_FFT, (Nx / 4), (Ny / 4));
 	dim3 dimGrid2(Nx / 4 / TILE_DIM, Ny / 4 / TILE_DIM, 1);
 	dim3 dimBlock2(TILE_DIM, BLOCK_ROWS, 1);
 
-	//s_wrap = clock();
 	copySharedMem << <dimGrid2, dimBlock2 >> >(out_array, out_PE_FFT, Nx/4);
-	//e_wrap = clock();	wrap_time += e_wrap - s_wrap;
-
-	
-	//free(host_out);
-	//free(host_FFT);
 }
 //--------------------------------------------------------------------------------------
 __global__ void real2cufft(cufftComplex *odata, const float *idata)
@@ -3339,7 +3328,10 @@ void PrintProcess(int counter, char *SPDir, char *BGDir, char *AngDir)
 {
 	end_time = clock();
 	float total_time = (float)(end_time - start_time) / CLOCKS_PER_SEC;
-
+	float dataTransT = dataTransfer_time / CLOCKS_PER_SEC;
+	float wrapT = wrap_time / CLOCKS_PER_SEC;
+	float unwrapT = unwrap_time / CLOCKS_PER_SEC;
+	float overallT = dataTransT + wrapT + overallT;
 	cudaMemGetInfo(&freeDeviceMemory, &totalDeviceMemory);
 	size_t usedMem = totalDeviceMemory - freeDeviceMemory;
 
@@ -3360,8 +3352,10 @@ void PrintProcess(int counter, char *SPDir, char *BGDir, char *AngDir)
 		"Angle Folder           : %s \n"		
 		"Reconstruction         : %s \n"
 		"Rescale Phase Images   : %s \n"
-		"Extraction Time        : %f sec (%.2f FPS)\n"
-		"Unwrapping Time        : %f sec (%.2f FPS)\n"
+		"Transfer Time          : %.3f sec\n"
+		"Extraction Time        : %.3f sec (%.2f FPS)\n"
+		"Unwrapping Time        : %.3f sec (%.2f FPS)\n"
+		"Overall Duration       : %.3f sec (%.2f FPS)\n"
 		"Total Time             : %f sec \n"
 		, omp_get_num_procs(), omp_get_num_threads()
 		, usedMem / 1024 / 1024, totalDeviceMemory / 1024 / 1024
@@ -3369,8 +3363,10 @@ void PrintProcess(int counter, char *SPDir, char *BGDir, char *AngDir)
 		, SPDir, BGDir, AngDir		
 		, ReconFlag ? "Yes" : "No"
 		, ResizeFlag ? "Yes" : "No"
-		, wrap_time / CLOCKS_PER_SEC, 1/((wrap_time / CLOCKS_PER_SEC)/AccumFrame)
-		, unwrap_time / CLOCKS_PER_SEC, 1/(((unwrap_time+ wrap_time) / CLOCKS_PER_SEC) / AccumFrame)
+		, dataTransT
+		, wrapT, 1/(wrapT /AccumFrame)
+		, unwrapT, 1/((unwrapT + wrapT) / AccumFrame)
+		, overallT, 1 / (overallT / AccumFrame)
 		, total_time);
 
 }

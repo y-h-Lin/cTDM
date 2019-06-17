@@ -60,7 +60,7 @@ typedef struct {
 
 using namespace std;
 clock_t start_time, end_time;
-clock_t sF_time, eF_time;
+//clock_t sF_time, eF_time;
 clock_t sE_time, eE_time;
 clock_t s_wrap, e_wrap;
 clock_t s_unwrap, e_unwrap;
@@ -70,12 +70,14 @@ float total_time;
 int AccumFrame;
 
 //int ResizeFlag, ReconFlag;
+int Nx, Ny, Nx2, Ny2;
 
 // used for this project
 int blocksInX, blocksInY;	//for original size
 int blocksInX2, blocksInY2;	//for original size/2
 int blocksInX3, blocksInY3;	//for original size/4
 int blocksInX4, blocksInY4;	//for original size/8
+
 
 //device memory
 cufftComplex *cuSP, *cuBG, *cuSP2, *cuBG2, *selectSP, *selectBG;
@@ -95,6 +97,8 @@ bool *status_series;
 float *sampleAngleRadX_Stack, *sampleAngleRadY_Stack;
 
 //Extraction QPI
+int rCircle, cCircle, radiusCircle;
+int max_idx_seq1D;
 //device memory
 float *cuSP_PE_temp, *cuBG_PE_temp, *cuSP_PE_resample, *cuBG_PE_resample;
 cufftComplex *device_PE_FFT, *out_PE_FFT;
@@ -163,8 +167,9 @@ void exportComplex(char * , cufftComplex*, int);
 
 const int TILE_DIM = 32;
 const int BLOCK_ROWS = 32;
-void extractQPI(float *SP, float *BG, cufftComplex *cuSP_FFT, cufftComplex *cuBG_FFT, int Nx, int Ny);
-void sequence1DFFT(float *ResampleArray, cufftComplex *out_array, int Nx, int Ny);
+void extractQPI_AlgorithmA(cufftComplex *SP, cufftComplex *BG, cufftComplex *cuSP_FFT, cufftComplex *cuBG_FFT, int Nx, int Ny, int frame);
+void extractQPI_AlgorithmB(float *SP, float *BG, cufftComplex *cuSP_FFT, cufftComplex *cuBG_FFT, int Nx, int Ny, int frame);
+void sequence1DFFT(float *ResampleArray, cufftComplex *out_array, int Nx, int Ny, int frame);
 __global__ void real2cufft(cufftComplex *odata, const float *idata);
 __global__ void HistogramFT(float *sumFFT_1D, cufftComplex *device_FFT, int Nx, int Ny);
 __global__ void CropFTdomain(cufftComplex *device_FFT, cufftComplex *device_crop, int Nx, int Ny, int center);
